@@ -1,0 +1,46 @@
+<!-- 댓글 섹션 -->
+<h2>댓글</h2>
+
+<form id="commentForm">
+  <textarea id="commentInput" placeholder="댓글을 입력하세요" required></textarea>
+  <button type="submit">댓글 달기</button>
+</form>
+
+<h3>댓글 목록</h3>
+<div id="commentsContainer"></div>
+
+<script>
+  // DOM 요소 가져오기
+  const commentForm = document.getElementById("commentForm");
+  const commentInput = document.getElementById("commentInput");
+  const commentsContainer = document.getElementById("commentsContainer");
+
+  // 댓글 제출 이벤트 처리
+  commentForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const commentText = commentInput.value;
+
+    // Firebase에 댓글 저장
+    db.ref("comments").push({
+      text: commentText,
+      timestamp: new Date().toISOString(),
+    });
+
+    commentInput.value = "";  // 입력 필드 초기화
+  });
+
+  // 댓글 실시간 불러오기
+  db.ref("comments").on("child_added", (snapshot) => {
+    const comment = snapshot.val();
+    displayComment(comment.text);
+  });
+
+  // 댓글 표시 함수
+  function displayComment(text) {
+    const commentElement = document.createElement("div");
+    commentElement.classList.add("comment");
+    commentElement.textContent = text;
+    commentsContainer.appendChild(commentElement);
+  }
+</script>
