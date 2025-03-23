@@ -26,3 +26,40 @@
     <script src="{{ script | relative_url }}"></script>
   {% endfor %}
 {% endif %}
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QP91JQZLEK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-QP91JQZLEK');
+</script>
+
+<!-- Google tag (firebase) -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBeQvd6NtR0kyxorLemvXnJSKJjKA0SBEU",
+    authDomain: "itsmegiho-system.firebaseapp.com",
+    databaseURL: "https://itsmegiho-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "itsmegiho-system",
+    storageBucket: "itsmegiho-system.firebasestorage.app",
+    messagingSenderId: "695617974833",
+    appId: "1:695617974833:web:c7dbad8700f1371cebdb10",
+    measurementId: "G-6NGGFE2DP1"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = database();
+</script>
