@@ -1,0 +1,242 @@
+# Week 1 Day 2 – SFU 심화학습 & 오픈소스 SFU 서버 비교
+
+안녕하세요! **Week 1 Day 2** 수업 자료입니다.  
+어제(Week 1 Day 1)에는 **Git/GitHub 기초**와 **WebRTC 기본**(P2P, SDP, ICE 등)을 복습했습니다.  
+오늘은 **SFU(Selective Forwarding Unit)** 개념을 좀 더 깊이 있게 학습하고,  
+여러 **오픈소스 SFU 서버(Janus/Mediasoup/Pion 등)**를 비교하면서  
+**Windows 서버 환경에서 SFU를 배포**하는 큰 그림을 잡아가겠습니다.
+
+> **전제**  
+> - Week 1 Day 1에서 Git 설치, 기본 명령어, 원격 저장소 연결, WebRTC(Offer/Answer, ICE) 개념을 공부함.  
+> - 오늘(Week 1 Day 2)은 **SFU 서버 이해**, **오픈소스 SFU 비교**, **Windows 배포 전략**을 주제로 실습과 문서화를 진행합니다.
+
+---
+
+## 1. 목표
+
+1. **SFU 심화 이해**  
+   - SFU가 어떠한 방식으로 미디어를 중계하고, Mesh/MCU 대비 어떤 장단점이 있는지 재정리  
+   - 대규모 연결에서 왜 SFU가 권장되는지 (대역폭/CPU 관점)
+
+2. **오픈소스 SFU 서버 비교**  
+   - **Janus**, **Mediasoup**, **Pion** 등 주요 서버의 특징, 장단점, 언어/OS 호환성  
+   - Windows 서버에서 어떤 SFU를 선택할지(주로 Janus를 염두에 두지만, 다른 옵션도 파악)
+
+3. **Windows 서버 배포 전략 설계**  
+   - 방화벽, 포트포워딩, NAT, TURN/STUN 고려  
+   - SFU 서버(예: Janus) 설치/구동 방식, 빌드/실행 흐름 확인
+
+---
+
+## 2. 이론
+
+### 2.1 SFU 심화
+
+1. **Selective Forwarding**  
+   - 서버(SFU)는 각 클라이언트가 보내는 RTP 스트림을 **디코딩 없이** 그대로 포워딩  
+   - 필요시 특정 구독자에게만 선택적으로 낮은 해상도(비디오), 오디오 계층을 전달  
+   - MCU와 달리 CPU 부담이 덜하지만, 클라이언트 개수만큼 다수 RTP/RTCP 세션을 관리해야 함
+
+2. **Mesh / MCU / SFU 비교 복습**  
+   - **Mesh**: 모든 클라이언트가 서로 직접 연결 (N명 시 연결선 폭발)  
+   - **MCU**: 서버에서 모든 스트림을 합성(디코딩→믹싱→재인코딩), 서버 고사양 필요  
+   - **SFU**: 서버는 미디어를 받아 ‘선별적으로’ 포워딩, 서버 대역폭은 증가하지만 CPU 부담은 MCU보다 작음  
+
+### 2.2 오픈소스 SFU 서버 비교
+
+1. **Janus** (C, Plugin 구조)  
+   - **장점**: 다양한 Plugin(비디오룸, 오디오브리지), 성숙한 문서/커뮤니티  
+   - **단점**: C 언어 기반, 커스텀 빌드 과정이 다소 복잡, Windows 네이티브 빌드 이슈가 있을 수 있음  
+2. **Mediasoup** (Node.js/C++)  
+   - **장점**: Node.js 기반, TypeScript/JavaScript 커뮤니티와 잘 맞음, 고성능  
+   - **단점**: 초기 설정 시 C++ 빌드 의존성, Windows에서 빌드가 약간 번거롭기도 함  
+3. **Pion** (Go)  
+   - **장점**: Go 생태계, 가벼운 프로젝트, 간단히 시작 가능  
+   - **단점**: 비교적 새로운 프로젝트, 일부 기능(Plugin 등)이 다른 대형 프로젝트만큼 풍부하지 않을 수 있음  
+
+> **정리**: “Janus”를 주요 후보로 삼되, 다른 SFU들도 특징을 알아두면 좋음.
+
+### 2.3 Windows 서버 배포 전략 (개요)
+
+1. **방화벽 & 포트**  
+   - WebRTC는 UDP 10,000~60,000 사이 임의 포트 사용 (ICE, DTLS)  
+   - Janus 기본 설정: 8088(HTTP), 8188(WebSocket) 등 열어줘야 할 수 있음  
+   - Windows Defender Firewall에서 인바운드 규칙 생성, UDP 다중 포트 열기
+
+2. **STUN / TURN**  
+   - NAT 뒤 참여자는 공인 IP가 없을 수 있음 → TURN 서버로 중계  
+   - `coturn` 같은 TURN 서버를 함께 두거나, Janus 내부 turnrelay 사용
+
+3. **빌드 / 실행 / 서비스화**  
+   - Janus를 Windows에서 직접 빌드(CMake) or Docker로 구동  
+   - 자동화(서비스 등록, 배치파일 실행, Docker)로 상시 운영  
+   - 안드로이드 클라이언트가 언제든 연결 가능하도록 **24시간 서버** 필요
+
+---
+
+## 3. 실습
+
+오늘 실습은 주로 **문서와 Git 정리** + **Windows 서버 설정 준비**입니다.  
+코드를 많이 작성하진 않지만, **Git**을 통해 학습 자료를 꼼꼼히 남기는 것이 핵심입니다.
+
+### 3.1 Git 브랜치 생성
+
+1. **새 브랜치**  
+   - Day 1에 이미 `main`에 작업했다면, 오늘 Day 2 작업을 별도 브랜치로 분리:
+     ```bash
+     git checkout main
+     git pull
+     git checkout -b week1-day2
+     ```
+   - 출력 예: `Switched to a new branch 'week1-day2'`
+
+2. **docs 폴더** 생성(혹은 기존 폴더 사용)  
+   - 폴더가 없다면:
+     ```bash
+     mkdir docs
+     cd docs
+     ```
+3. **SFU-comparison.md** 파일 작성  
+   - VSCode나 메모장을 열고, 아래처럼 내용 입력:
+     ```markdown
+     # SFU 서버 비교 (Week 1 Day 2)
+     
+     ## Janus
+     - Pros: ...
+     - Cons: ...
+     
+     ## Mediasoup
+     - Pros: ...
+     - Cons: ...
+     
+     ## Pion
+     - Pros: ...
+     - Cons: ...
+     ```
+   - 저장 후:
+     ```bash
+     git add .
+     git commit -m "Add SFU-comparison.md for Day2"
+     ```
+
+### 3.2 Janus 깃허브 리포지토리/문서 탐색 (인터넷 검색)
+
+1. **인터넷 검색**  
+   - 브라우저에서 `Janus GitHub` 검색 → [https://github.com/meetecho/janus-gateway](https://github.com/meetecho/janus-gateway)  
+   - “Windows build” 관련 자료, WSL(Windows Subsystem for Linux) 사용 예시 확인  
+   - 문서(https://janus.conf.meetecho.com/docs/)도 함께 살펴보기
+
+2. **중요 파일 체크**  
+   - `janus.cfg`, `plugins` 폴더, CMakeLists.txt 빌드 스크립트  
+   - 방화벽 포트, UDP range 설정 등에 대한 문서 검색 (예: “janus.udp_range”)  
+3. **내용 요약**  
+   - `docs/Janus-Windows-Notes.md` 작성:
+     ```markdown
+     # Janus on Windows Notes
+     
+     - Building Janus on Windows might require:
+       1) Cygwin or MSYS2, or WSL
+       2) Dependencies: libmicrohttpd, libcurl, libnice, openssl, libsrtp, etc.
+     - Alternatively, run Janus in Docker on Windows if direct build is too complex.
+     
+     - Ports to open:
+       - 8088 (HTTP), 8089 (HTTPS), 8188 (WS), 8989 (WSS)
+       - Additional UDP ports for WebRTC (usually 10000+ range).
+     ```
+   - 커밋 & 푸시:
+     ```bash
+     git add .
+     git commit -m "Document Janus Windows build notes"
+     git push -u origin week1-day2
+     ```
+
+### 3.3 Windows 서버 방화벽 & 포트 세팅 시뮬레이션
+
+1. **Windows Defender Firewall**  
+   - “고급 보안” → “인바운드 규칙 만들기” → 특정 포트(8088, 8188 등) 허용 → UDP 범위(10000~60000) 허용  
+   - 실제 서버 운영 시 관리자 권한으로 설정 필수
+
+2. **(선택) TURN 서버 설치 검토**  
+   - [coturn GitHub](https://github.com/coturn/coturn) 검색 → Windows 빌드 or Docker 사용 검토  
+   - 추후 안드로이드가 NAT 뒤에서 접속할 때 TURN이 필수적일 수 있음
+
+3. **문서 업데이트**  
+   - `docs/Windows-Deployment.md` 생성:
+     ```markdown
+     # Windows Deployment Steps (SFU)
+
+     1. Open Windows Defender Firewall
+     2. New Inbound Rule: Janus HTTP (TCP 8088), WS (TCP 8188)
+     3. New Inbound Rule: UDP range 10000-60000 (if needed for WebRTC)
+     4. (Optional) COTURN installation steps or Docker usage
+     ```
+   - 커밋:
+     ```bash
+     git add .
+     git commit -m "Add Windows firewall and deployment notes"
+     ```
+
+### 3.4 학습 정리 & 스코프 결정
+
+1. **결론**  
+   - 주로 “Janus”를 사용하되, Windows 환경에서 **WSL**이나 **Docker**로 빌드 가능  
+   - 방화벽과 TURN 설정은 꼭 챙겨야 함 (다자 연결, NAT 환경)  
+2. **Git Merge** (선택)  
+   - Day 2 실습이 끝나면 `week1-day2` 브랜치를 `main`에 병합:
+     ```bash
+     git checkout main
+     git pull
+     git merge week1-day2
+     git push
+     ```
+
+> 이렇게 하면 오늘(Week 1 Day 2) 작업 내용이 “main”에 반영되어, 다른 사람이 참고 가능.
+
+---
+
+## 4. 숙제(퀴즈)
+
+1. **SFU 비교 퀴즈**  
+   - Janus와 Mediasoup 중, 본인이 선호할 것 같은 이유 2가지를 적어보세요. (언어/커뮤니티/성능 등)  
+2. **Windows 서버 배포**  
+   - 방화벽에서 UDP 다중 포트를 열어야 하는 이유는 무엇인가?  
+3. **TURN 서버**  
+   - TURN이 필요한 상황 1가지를 예시 들고, 없으면 어떻게 되는지 설명해보세요. (예: Symmetric NAT)
+
+(숙제 답안을 `docs/Day2-quiz.md` 등으로 정리 후, `git commit & push` 해주세요!)
+
+---
+
+## 5. 코멘트/팁
+
+1. **SFU Server Selection**  
+   - 팀의 역량(사용 언어), 운영 환경(Windows/Linux)을 종합해 결정하세요.  
+   - Janus는 C 기반이지만 Plugin 다양, 문서 풍부해 입문하기 괜찮음.  
+   - Windows에서 Native Build가 까다롭다면, **WSL** or **Docker**를 사용하세요.
+
+2. **방화벽 & 포트**  
+   - WebRTC는 UDP를 사용 → 방화벽이 막히면 연결 불가  
+   - 만약 Cloud 서버(AWS/Azure/GCP)라면, Security Group/Network Firewall도 설정 필요
+
+3. **Git 문서화 습관**  
+   - 코드 외에 문서/노트도 Git에 넣으면 설치 과정 복습, 동료와 공유가 편해집니다.  
+   - 오늘 작성한 `.md` 파일들이 훗날 큰 도움이 될 것입니다.
+
+4. **다음 수업 예고**  
+   - **Day 3**에는 실제 “Android ↔ Janus SFU 1:1 오디오 통신”을 시도할 예정  
+   - Offer/Answer를 Janus에 전달하고, “Answer”를 받아서 오디오를 송수신하는 기본 데모를 구축해볼 겁니다.
+
+---
+
+# 마무리
+
+오늘 **Week 1 Day 2** 수업을 모두 따라 했다면,
+
+- [ ] **SFU 심화 개념**(Selective Forwarding 작동 원리) 이해  
+- [ ] **오픈소스 SFU(Janus/Mediasoup/Pion) 비교** 문서 작성 & Git 커밋  
+- [ ] **Windows 서버 방화벽/포트** 개념 파악, `docs/Windows-Deployment.md` 추가  
+- [ ] **TURN 서버(필요성)** 및 Docker 빌드 가능성 확인  
+
+이 모든 것을 달성하셨을 것입니다.  
+이제 SFU 서버 측의 큰 그림이 어느 정도 잡혔으니,  
+곧 “안드로이드 클라이언트”와 실제 **Offer/Answer**를 주고받는 실습으로 넘어갈 준비가 되었습니다!
