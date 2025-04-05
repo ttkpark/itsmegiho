@@ -1,0 +1,10 @@
+---
+title: "Fornerds"
+layout: categories
+permalink: /categories/Fornerds/
+taxonomy: category
+---
+{% assign project_posts = site.posts | where_exp: "item", "item.categories contains 'Fornerds'" %}
+{% for post in project_posts %}
+  {% include archive-single.html %}
+{% endfor %}

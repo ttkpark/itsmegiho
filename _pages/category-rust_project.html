@@ -1,0 +1,10 @@
+---
+title: "rust_project"
+layout: categories
+permalink: /categories/rust_project/
+taxonomy: category
+---
+{% assign project_posts = site.posts | where_exp: "item", "item.categories contains 'rust_project'" %}
+{% for post in project_posts %}
+  {% include archive-single.html %}
+{% endfor %}

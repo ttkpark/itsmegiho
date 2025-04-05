@@ -1,3 +1,9 @@
+---
+layout: post
+title: "MeetingResult"
+date : 2025-04-04
+categories: [Fornerds]
+---
 # 2025-04-04 김경서님, 한동민님 미팅
 - 시간 : 1120i ~ 1355i
 

@@ -1,3 +1,9 @@
+---
+layout: post
+title: "After-Week1-Day1"
+date : 2025-04-02
+categories: [SFU_project]
+---
 # git에 대해 배우기
 - `git init`
   현재 폴더에 git을 초기화함.

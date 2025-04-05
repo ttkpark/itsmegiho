@@ -1,3 +1,9 @@
+---
+layout: post
+title: "L100Tutorial-Day1-3-After"
+date : 2025-04-05
+categories: [rust_project]
+---
 # Rust 임베디드 생태계
 1. Core crates
 2. HAL

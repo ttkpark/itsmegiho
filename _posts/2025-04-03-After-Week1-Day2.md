@@ -1,3 +1,9 @@
+---
+layout: post
+title: "After-Week1-Day2"
+date : 2025-04-03
+categories: [SFU_project]
+---
 # SFU 심화
 1. Selective Forwarding
   디코딩 없이 그대로 포워딩 / RTP Session
